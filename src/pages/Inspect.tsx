@@ -120,7 +120,7 @@ const Inspect: React.FC<IProps> = (props) => {
     ),
     document: (id, path) => (
       <MosaicWindow<ViewId> path={path} title={"Document"} toolbarControls={[
-        dirtyJSON !== JSON.stringify(currentDocument?.state.content, null, 4) && dirtyJSON ? <Button variant="contained" color="secondary" style={{ height: "30px" }} onClick={handleSave}>Save</Button> : undefined,
+        dirtyJSON !== JSON.stringify(currentDocument?.state.content, null, 4) && dirtyJSON && props.authenticated ? <Button variant="contained" color="secondary" style={{ height: "30px" }} onClick={handleSave}>Save</Button> : undefined,
         ...DEFAULT_CONTROLS_WITHOUT_CREATION
       ]}>
         <CustomEditor

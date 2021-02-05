@@ -4,6 +4,7 @@ import { AppBar, Button, Grid, IconButton, InputBase, Paper, Toolbar, Tooltip, T
 import Brightness3Icon from "@material-ui/icons/Brightness3";
 import WbSunnyIcon from "@material-ui/icons/WbSunny";
 import { grey } from "@material-ui/core/colors";
+import { formatDID } from "../utils";
 
 interface IProps {
   authenticated: boolean;
@@ -29,7 +30,7 @@ const NavBar: React.FC<IProps> = (props) => {
                </Typography>
             </Grid>
           </Grid>
-          <Grid container justify="center" alignItems="center" item xs={8} >
+          <Grid container justify="center" alignItems="center" item xs={7} >
             <Paper style={{
               background: "rgba(0, 0, 0, 0.1)",
               padding: "0px 10px 0px 10px",
@@ -38,9 +39,9 @@ const NavBar: React.FC<IProps> = (props) => {
               <InputBase inputProps={{ spellCheck: false }} value={props.inputText} style={{ width: "100%", color: grey[300] }} placeholder="Enter a Document ID" onChange={props.onInputChange} />
             </Paper>
           </Grid>
-          <Grid item xs={2} container justify="flex-end" alignItems="center">
+          <Grid item xs={3} container justify="flex-end" alignItems="center">
             {!props.authenticated && <Button color="inherit" onClick={props.onClick}>Authenticate</Button>}
-            {props.authenticated && <Typography>{window.idx && window.idx.id}</Typography>}
+            {props.authenticated && <Button variant="outlined" target="_blank" href="https://self-id.vercel.app/">{window.idx && formatDID(window.idx.id)}</Button>}
             <Tooltip title="Toggle Dark Mode">
               <IconButton onClick={props.onDarkModeToggle}>
                 {props.darkMode ? <Brightness3Icon /> : <WbSunnyIcon />}
