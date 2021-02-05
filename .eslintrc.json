@@ -1,0 +1,13 @@
+{
+  "rules": {
+    "no-unused-vars": "error",
+    "no-template-curly-in-string": "off"
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended",
+    "react-app",
+    "react-app/jest"
+  ]
+}

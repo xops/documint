@@ -1,0 +1,32 @@
+body {
+  margin: 0;
+}
+html,
+body,
+#app {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+}
+#root .mosaic {
+  height: calc(100% - 64px);
+}
+
+
+#root .mosaic-window .mosaic-window-toolbar, .mosaic-preview .mosaic-window-toolbar {
+  z-index: 1;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #666;
+  z-index: 1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 5px;
+}
