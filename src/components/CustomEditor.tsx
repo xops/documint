@@ -33,7 +33,7 @@ const CustomEditor: React.FC<IProps> = (props) => {
   return (
     <MonacoEditor
       height="100%"
-      defaultValue={props.value}
+      defaultValue={props.value || ""}
       onChange={props.onChange}
       editorDidMount={(editor: any, monaco: any) => {
         setEditor(editor);

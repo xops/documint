@@ -34,9 +34,10 @@ const stateToJSON = (state: DocState | undefined) => {
 const Inspect: React.FC<IProps> = (props) => {
   const darkMode = useDarkMode();
   const [currentDocument, setCurrentDocument] = useState<Doctype | undefined>();
-  const [currentSchema, setCurrentSchema] = useState<Doctype | undefined>();
+  const [currentSchema, setCurrentSchema] = useState<any | undefined>();
   const [currentCommits, setCurrentCommits] = useState<Record<string, any>[] | undefined>();
   const [selectedCommit, setSelectedCommit] = useState<any>();
+  const [documentEditor, setDocumentEditor] = useState<any>();
   const [schemaEditor, setSchemaEditor] = useState<any>();
   const [dirtyJSON, setDirtyJSON] = useState();
   const [mosaicValue, setMosaicValue] = useState<any>();
@@ -53,10 +54,15 @@ const Inspect: React.FC<IProps> = (props) => {
     const d = await window.ceramic?.loadDocument(newDocID);
     if (d) {
       setCurrentDocument(d);
+      console.log("setting doc", documentEditor);
+      if (documentEditor) {
+        console.log("setting doc ", d.state.content)
+        documentEditor.setValue(JSON.stringify(d.state.content, null, 4));
+      }
       if (d.state.metadata.schema) {
         const r = await window.ceramic?.loadDocument(d.state.metadata.schema);
         if (r) {
-          setCurrentSchema(r);
+          setCurrentSchema(r.state.content);
         } else {
           setCurrentSchema(undefined);
         }
@@ -115,7 +121,7 @@ const Inspect: React.FC<IProps> = (props) => {
           editorDidMount={(editor: any) => {
             setSchemaEditor(editor)
           }}
-          value={(currentSchema && JSON.stringify(currentSchema.state.content, null, 4)) || ""}
+          value={(currentSchema && JSON.stringify(currentSchema, null, 4)) || ""}
         />
       </MosaicWindow>
     ),
@@ -130,8 +136,11 @@ const Inspect: React.FC<IProps> = (props) => {
         ...DEFAULT_CONTROLS_WITHOUT_CREATION
       ]}>
         <CustomEditor
-          value={(currentDocument && JSON.stringify(currentDocument.state.content, null, 4)) || ""}
-          schema={currentSchema && currentSchema.state.content}
+          value={(currentDocument && JSON.stringify(currentDocument.state.content, null, 4))}
+          editorDidMount={(editor: any) => {
+            setDocumentEditor(editor)
+          }}
+          schema={currentSchema}
           onChange={(value: any) => {
             setDirtyJSON(value);
           }}
@@ -179,6 +188,7 @@ const Inspect: React.FC<IProps> = (props) => {
       setCurrentSchema(undefined);
       setCurrentDocument(undefined);
       setCurrentCommits(undefined);
+      setDirtyJSON(undefined);
       return;
     }
     try {
@@ -188,10 +198,14 @@ const Inspect: React.FC<IProps> = (props) => {
         return;
       }
       setCurrentDocument(d);
+      if (documentEditor) {
+        console.log("setting doc ", d.state.content)
+        documentEditor.setValue(JSON.stringify(d.state.content, null, 4));
+      }
       if (d.metadata.schema) {
         const r = await window.ceramic?.loadDocument(d.metadata.schema);
         if (r) {
-          setCurrentSchema(r);
+          setCurrentSchema(r.state.content);
         } else {
           setCurrentSchema(undefined);
         }
@@ -215,7 +229,7 @@ const Inspect: React.FC<IProps> = (props) => {
 
   useEffect(() => {
     if (schemaEditor) {
-      schemaEditor.setValue(currentSchema ? JSON.stringify(currentSchema?.state.content, null, 4) : "")
+      schemaEditor.setValue(currentSchema ? JSON.stringify(currentSchema, null, 4) : "")
     }
   }, [currentSchema, schemaEditor]);
   return (
