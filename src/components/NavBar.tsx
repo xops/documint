@@ -48,7 +48,7 @@ const NavBar: React.FC<IProps> = (props) => {
           </Grid>
           <Grid item xs={3} container justify="flex-end" alignItems="center">
             {!props.authenticated && <Button color="inherit" onClick={props.onClick} variant="outlined">Connect</Button>}
-            {props.authenticated && <Button startIcon={props.profile && props.profile.image && props.profile.image.original && <Avatar src={toImageSrc(props.profile.image.original)}/>} variant="outlined" target="_blank" href="https://self-id.vercel.app/">{(props.profile && props.profile.name) || (window.idx && formatDID(window.idx.id))}{props.profile && props.profile.emoji}</Button>}
+            {props.authenticated && <Button style={{textTransform: "none"}} startIcon={props.profile && props.profile.image && props.profile.image.original && <Avatar src={toImageSrc(props.profile.image.original)}/>} variant="outlined" target="_blank" href="https://self-id.vercel.app/">{(props.profile && props.profile.name) || (window.idx && formatDID(window.idx.id))}&nbsp;{props.profile && props.profile.emoji}</Button>}
             <Tooltip title="Toggle Dark Mode">
               <IconButton onClick={props.onDarkModeToggle}>
                 {props.darkMode ? <Brightness3Icon /> : <WbSunnyIcon />}
