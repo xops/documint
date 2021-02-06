@@ -147,7 +147,7 @@ const Inspect: React.FC<IProps> = (props) => {
             setDirtyJSON(value);
           }}
           editorOptions={{
-            readOnly: false
+            readOnly: (props.authenticated && (!documentID || (window.did && currentDocument?.state.metadata.controllers.includes(window.did?.id)))) ? false : true
           }}
         />
       </MosaicWindow>
