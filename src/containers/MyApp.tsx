@@ -14,7 +14,7 @@ const MyApp: React.FC = () => {
   const darkMode = useDarkMode();
   const theme = darkMode.value ? darkTheme : lightTheme;
   const [authenticated, setAuthenticated] = useState(false);
-  const [documentIDInput, setDocumentIDInput] = useState("k2t6wyfsu4pfzma1qzqy74wd3ujyuqjp25x7pzgw3dgljyz33cih2672nk3tdu");
+  const [documentIDInput, setDocumentIDInput] = useState(process.env.REACT_APP_DEFAULT_DOCID || "");
 
   // const [profile, setProfile] = useState<any>();
 

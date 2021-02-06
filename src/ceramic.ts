@@ -6,11 +6,9 @@ declare global {
     ceramic?: CeramicApi
   }
 }
-const url = "https://ceramic-clay.3boxlabs.com";
-// const url = "http://localhost:7007";
 
 export async function createCeramic(): Promise<CeramicApi> {
-  const ceramic = new Ceramic(url);
+  const ceramic = new Ceramic(process.env.REACT_APP_CERAMIC_API);
   window.ceramic = ceramic
   return Promise.resolve(ceramic as CeramicApi)
 }

@@ -5,11 +5,7 @@ import type { DIDProvider } from 'dids'
 import Fortmatic from 'fortmatic'
 import Web3Modal from 'web3modal'
 
-
-// const threeIDURL = "http://localhost:30001/";
-const threeIDURL = undefined;
-
-export const threeID = new ThreeIdConnect(threeIDURL)
+export const threeID = new ThreeIdConnect(process.env.REACT_APP_THREEID_API)
 
 export const web3Modal = new Web3Modal({
   network: 'mainnet',
