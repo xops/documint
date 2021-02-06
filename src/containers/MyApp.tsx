@@ -16,16 +16,15 @@ const MyApp: React.FC = () => {
   const [authenticated, setAuthenticated] = useState(false);
   const [documentIDInput, setDocumentIDInput] = useState(process.env.REACT_APP_DEFAULT_DOCID || "");
 
-  // const [profile, setProfile] = useState<any>();
+  const [profile, setProfile] = useState<any>();
 
   const handleClick = () => {
     authenticate().then(async (did: string) => {
       setAuthenticated(true);
-      // if (window.idx) {
-      //   const profile = await window.idx.get("basicProfile", did);
-      //   setProfile(profile);
-      // }
-      // console.log(window.idx);
+      if (window.idx) {
+        const profile = await window.idx.get("basicProfile", did);
+        setProfile(profile);
+      }
     }).catch((e) => {
       console.log("error", e);
     });
@@ -49,6 +48,7 @@ const MyApp: React.FC = () => {
           onDarkModeToggle={darkMode.toggle}
           darkMode={darkMode.value}
           inputText={documentIDInput}
+          profile={profile}
           onInputChange={(event) => setDocumentIDInput(event.target.value)}
         />
         <Inspect documentID={documentIDInput} authenticated={authenticated} setDocumentId={setDocumentId}/>

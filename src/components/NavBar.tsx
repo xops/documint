@@ -1,10 +1,16 @@
 import React from "react";
-import { AppBar, Button, Grid, IconButton, InputBase, Paper, Toolbar, Tooltip, Typography } from "@material-ui/core";
+import { AppBar, Button, Grid, IconButton, InputBase, Paper, Toolbar, Tooltip, Typography, Avatar } from "@material-ui/core";
+import type { ImageMetadata } from '@ceramicstudio/idx-constants'
 
 import Brightness3Icon from "@material-ui/icons/Brightness3";
 import WbSunnyIcon from "@material-ui/icons/WbSunny";
 import { grey } from "@material-ui/core/colors";
 import { formatDID } from "../utils";
+const IPFS_PREFIX = 'ipfs://'
+
+export function toImageSrc(image: ImageMetadata): string {
+  return image.src.replace(IPFS_PREFIX, process.env.REACT_APP_IPFS_URL || "");
+}
 
 interface IProps {
   authenticated: boolean;
@@ -12,6 +18,7 @@ interface IProps {
   darkMode: boolean;
   onClick: () => void;
   inputText?: string;
+  profile: any;
   onInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
@@ -41,7 +48,7 @@ const NavBar: React.FC<IProps> = (props) => {
           </Grid>
           <Grid item xs={3} container justify="flex-end" alignItems="center">
             {!props.authenticated && <Button color="inherit" onClick={props.onClick}>Authenticate</Button>}
-            {props.authenticated && <Button variant="outlined" target="_blank" href="https://self-id.vercel.app/">{window.idx && formatDID(window.idx.id)}</Button>}
+            {props.authenticated && <Button startIcon={props.profile && props.profile.image && props.profile.image.original && <Avatar src={toImageSrc(props.profile.image.original)}/>} variant="outlined" target="_blank" href="https://self-id.vercel.app/">{(props.profile && props.profile.name) || (window.idx && formatDID(window.idx.id))}{props.profile && props.profile.emoji}</Button>}
             <Tooltip title="Toggle Dark Mode">
               <IconButton onClick={props.onDarkModeToggle}>
                 {props.darkMode ? <Brightness3Icon /> : <WbSunnyIcon />}

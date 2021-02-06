@@ -6,7 +6,8 @@ import { Mosaic, MosaicBranch, MosaicWindow, DEFAULT_CONTROLS_WITHOUT_CREATION }
 import DocID from "@ceramicnetwork/docid";
 import CustomEditor from '../components/CustomEditor';
 import { DocState, DoctypeUtils, Doctype } from '@ceramicnetwork/common';
-import { Button, List, ListItem, ListItemText, Typography } from "@material-ui/core";
+import { Button, List, ListItem, ListItemText, Typography, Tooltip } from "@material-ui/core";
+import EditIcon from "@material-ui/icons/Edit"
 export type ViewId = "schema" | "document" | "state" | "commits" | "new";
 
 interface IProps {
@@ -50,7 +51,6 @@ const Inspect: React.FC<IProps> = (props) => {
       setSelectedCommit(commitCID);
     }
     const d = await window.ceramic?.loadDocument(newDocID);
-    console.log("found new doc from commit", d, commitCID);
     if (d) {
       setCurrentDocument(d);
       if (d.state.metadata.schema) {
@@ -69,7 +69,6 @@ const Inspect: React.FC<IProps> = (props) => {
 
   const handleSave = async () => {
     const confirm = window.confirm("Are you sure you want to save?");
-    console.log(window.did);
 
     if (!window.did) {
       return;
@@ -89,6 +88,7 @@ const Inspect: React.FC<IProps> = (props) => {
           }
         })
         if (newDocument) {
+          setDirtyJSON(undefined);
           props.setDocumentId(newDocument.id.toString())
         }
       } catch (e) {
@@ -100,6 +100,7 @@ const Inspect: React.FC<IProps> = (props) => {
     if (props.authenticated && currentDocument && typeof dirtyJSON === "string") {
       try {
         await currentDocument.change({ content: JSON.parse(dirtyJSON || "") })
+        setDirtyJSON(undefined);
         loadDocument(props.documentID);
       } catch (e) {
         alert(e.message);
@@ -120,7 +121,12 @@ const Inspect: React.FC<IProps> = (props) => {
     ),
     document: (id, path) => (
       <MosaicWindow<ViewId> path={path} title={"Document"} toolbarControls={[
-        dirtyJSON !== JSON.stringify(currentDocument?.state.content, null, 4) && dirtyJSON && props.authenticated ? <Button variant="contained" color="secondary" style={{ height: "30px" }} onClick={handleSave}>Save</Button> : undefined,
+        dirtyJSON !== JSON.stringify(currentDocument?.state.content, null, 4) &&
+          dirtyJSON && props.authenticated &&
+            (!props.documentID || (window.did && currentDocument?.state.metadata.controllers.includes(window.did?.id)))
+        ? <Button variant="contained" color="secondary" style={{ height: "30px" }} onClick={handleSave}>Save</Button>
+        : undefined,
+        (!props.documentID || (window.did && currentDocument?.state.metadata.controllers.includes(window.did?.id))) ? <Tooltip title="Document Editable"><EditIcon fontSize="small" style={{color: "#a7b6c2", marginTop: "4px", marginRight: "7px", marginLeft: "15px"}} /></Tooltip> : undefined,
         ...DEFAULT_CONTROLS_WITHOUT_CREATION
       ]}>
         <CustomEditor
