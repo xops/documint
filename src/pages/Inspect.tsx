@@ -8,12 +8,11 @@ import CustomEditor from '../components/CustomEditor';
 import { DocState, DoctypeUtils, Doctype } from '@ceramicnetwork/common';
 import { Button, List, ListItem, ListItemText, Typography, Tooltip } from "@material-ui/core";
 import EditIcon from "@material-ui/icons/Edit"
+import { useParams, useHistory } from "react-router-dom";
 export type ViewId = "schema" | "document" | "state" | "commits" | "new";
 
 interface IProps {
-  documentID: string;
   authenticated: boolean;
-  setDocumentId: (docId: string) => void;
 }
 
 const commitsToJSON = (commits: any[]) => {
@@ -32,6 +31,9 @@ const stateToJSON = (state: DocState | undefined) => {
   return DoctypeUtils.serializeState(state);
 }
 const Inspect: React.FC<IProps> = (props) => {
+  const { documentID } = useParams();
+  const history = useHistory();
+
   const darkMode = useDarkMode();
   const [currentDocument, setCurrentDocument] = useState<Doctype | undefined>();
   const [currentSchema, setCurrentSchema] = useState<any | undefined>();
@@ -42,7 +44,7 @@ const Inspect: React.FC<IProps> = (props) => {
   const [dirtyJSON, setDirtyJSON] = useState();
   const [mosaicValue, setMosaicValue] = useState<any>();
   const handleVersionChange = async (commitCID: string, index: number) => {
-    const docID = DocID.fromString(props.documentID);
+    const docID = DocID.fromString(documentID);
     let newDocID;
     if (index === 0) {
       newDocID = docID;
@@ -84,7 +86,7 @@ const Inspect: React.FC<IProps> = (props) => {
       return;
     }
 
-    if (!props.documentID) {
+    if (!documentID) {
       try {
         const newDocument = await window.ceramic?.createDocument("tile", {
           content: JSON.parse(dirtyJSON || ""),
@@ -95,7 +97,7 @@ const Inspect: React.FC<IProps> = (props) => {
         })
         if (newDocument) {
           setDirtyJSON(undefined);
-          props.setDocumentId(newDocument.id.toString())
+          history.push("/" + newDocument.id.toString())
         }
       } catch (e) {
         alert(e.message);
@@ -107,7 +109,7 @@ const Inspect: React.FC<IProps> = (props) => {
       try {
         await currentDocument.change({ content: JSON.parse(dirtyJSON || "") })
         setDirtyJSON(undefined);
-        loadDocument(props.documentID);
+        loadDocument(documentID);
       } catch (e) {
         alert(e.message);
       }
@@ -129,10 +131,10 @@ const Inspect: React.FC<IProps> = (props) => {
       <MosaicWindow<ViewId> path={path} title={"Document"} toolbarControls={[
         dirtyJSON !== JSON.stringify(currentDocument?.state.content, null, 4) &&
           dirtyJSON && props.authenticated &&
-            (!props.documentID || (window.did && currentDocument?.state.metadata.controllers.includes(window.did?.id)))
-        ? <Button variant="contained" color="secondary" style={{ height: "30px" }} onClick={handleSave}>Save</Button>
-        : undefined,
-        (!props.documentID || (window.did && currentDocument?.state.metadata.controllers.includes(window.did?.id))) ? <Tooltip title="Document Editable"><EditIcon fontSize="small" style={{color: "#a7b6c2", marginTop: "4px", marginRight: "7px", marginLeft: "15px"}} /></Tooltip> : undefined,
+          (!documentID || (window.did && currentDocument?.state.metadata.controllers.includes(window.did?.id)))
+          ? <Button variant="contained" color="secondary" style={{ height: "30px" }} onClick={handleSave}>Save</Button>
+          : undefined,
+        (!documentID || (window.did && currentDocument?.state.metadata.controllers.includes(window.did?.id))) ? <Tooltip title="Document Editable"><EditIcon fontSize="small" style={{ color: "#a7b6c2", marginTop: "4px", marginRight: "7px", marginLeft: "15px" }} /></Tooltip> : undefined,
         ...DEFAULT_CONTROLS_WITHOUT_CREATION
       ]}>
         <CustomEditor
@@ -223,9 +225,9 @@ const Inspect: React.FC<IProps> = (props) => {
 
   useEffect(() => {
     if (window.ceramic) {
-      loadDocument(props.documentID);
+      loadDocument(documentID);
     }
-  }, [props.documentID]);
+  }, [documentID]); //eslint-disable-line
 
   useEffect(() => {
     if (schemaEditor) {

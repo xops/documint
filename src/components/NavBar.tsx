@@ -6,6 +6,8 @@ import Brightness3Icon from "@material-ui/icons/Brightness3";
 import WbSunnyIcon from "@material-ui/icons/WbSunny";
 import { grey } from "@material-ui/core/colors";
 import { formatDID } from "../utils";
+import { useHistory, useParams } from "react-router-dom";
+
 const IPFS_PREFIX = 'ipfs://'
 
 export function toImageSrc(image: ImageMetadata): string {
@@ -19,10 +21,11 @@ interface IProps {
   onClick: () => void;
   inputText?: string;
   profile: any;
-  onInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const NavBar: React.FC<IProps> = (props) => {
+  const history = useHistory();
+  const { documentID } = useParams();
   return (
     <AppBar position="static">
       <Toolbar>
@@ -43,12 +46,18 @@ const NavBar: React.FC<IProps> = (props) => {
               padding: "0px 10px 0px 10px",
               width: "100%",
             }} elevation={0}>
-              <InputBase inputProps={{ spellCheck: false }} value={props.inputText} style={{ width: "100%", color: grey[300] }} placeholder="Enter a Document ID" onChange={props.onInputChange} />
+              <InputBase inputProps={{ spellCheck: false }} value={documentID || ""} style={{ width: "100%", color: grey[300] }} placeholder="Enter a Document ID" onChange={(event) => {
+                let toRoute = "/";
+                if (event.target.value) {
+                  toRoute += event.target.value;
+                }
+                history.push(toRoute);
+              }} />
             </Paper>
           </Grid>
           <Grid item xs={3} container justify="flex-end" alignItems="center">
             {!props.authenticated && <Button color="inherit" onClick={props.onClick} variant="outlined">Connect</Button>}
-            {props.authenticated && <Button style={{textTransform: "none"}} startIcon={props.profile && props.profile.image && props.profile.image.original && <Avatar src={toImageSrc(props.profile.image.original)}/>} variant="outlined" target="_blank" href="https://self-id.vercel.app/">{(props.profile && props.profile.name) || (window.idx && formatDID(window.idx.id))}&nbsp;{props.profile && props.profile.emoji}</Button>}
+            {props.authenticated && <Button style={{ textTransform: "none" }} startIcon={props.profile && props.profile.image && props.profile.image.original && <Avatar src={toImageSrc(props.profile.image.original)} />} variant="outlined" target="_blank" href="https://self-id.vercel.app/">{(props.profile && props.profile.name) || (window.idx && formatDID(window.idx.id))}&nbsp;{props.profile && props.profile.emoji}</Button>}
             <Tooltip title="Toggle Dark Mode">
               <IconButton onClick={props.onDarkModeToggle}>
                 {props.darkMode ? <Brightness3Icon /> : <WbSunnyIcon />}

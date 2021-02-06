@@ -9,13 +9,15 @@ import "@blueprintjs/core/lib/css/blueprint.css";
 import "@blueprintjs/icons/lib/css/blueprint-icons.css";
 import * as monaco from "monaco-editor";
 import Inspect from '../pages/Inspect';
-
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+} from "react-router-dom";
 const MyApp: React.FC = () => {
   const darkMode = useDarkMode();
   const theme = darkMode.value ? darkTheme : lightTheme;
   const [authenticated, setAuthenticated] = useState(false);
-  const [documentIDInput, setDocumentIDInput] = useState(process.env.REACT_APP_DEFAULT_DOCID || "");
-
   const [profile, setProfile] = useState<any>();
 
   const handleClick = () => {
@@ -30,30 +32,38 @@ const MyApp: React.FC = () => {
     });
   }
 
-  const setDocumentId = (docId: string) => {
-    setDocumentIDInput(docId);
-  }
-
   useEffect(() => {
     monaco.editor.setTheme(darkMode.value ? "vs-dark" : "vs");
   }, [darkMode.value])
 
   return (
-    <div >
+    <Router>
       <MuiThemeProvider theme={theme}>
         <CssBaseline />
-        <NavBar
-          authenticated={authenticated}
-          onClick={handleClick}
-          onDarkModeToggle={darkMode.toggle}
-          darkMode={darkMode.value}
-          inputText={documentIDInput}
-          profile={profile}
-          onInputChange={(event) => setDocumentIDInput(event.target.value)}
-        />
-        <Inspect documentID={documentIDInput} authenticated={authenticated} setDocumentId={setDocumentId}/>
+        <Switch>
+          <Route path="/:documentID">
+            <NavBar
+              authenticated={authenticated}
+              onClick={handleClick}
+              onDarkModeToggle={darkMode.toggle}
+              darkMode={darkMode.value}
+              profile={profile}
+            />
+            <Inspect authenticated={authenticated} />
+          </Route>
+          <Route path="/">
+            <NavBar
+              authenticated={authenticated}
+              onClick={handleClick}
+              onDarkModeToggle={darkMode.toggle}
+              darkMode={darkMode.value}
+              profile={profile}
+            />
+            <Inspect authenticated={authenticated} />
+          </Route>
+        </Switch>
       </MuiThemeProvider>
-    </div>
+    </Router>
   )
 }
 
