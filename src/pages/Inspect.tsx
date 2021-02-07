@@ -92,7 +92,6 @@ const Inspect: React.FC<IProps> = (props) => {
           content: JSON.parse(dirtyJSON || ""),
           metadata: {
             controllers: [window.did.id],
-            family: "doc family"
           }
         })
         if (newDocument) {
@@ -201,7 +200,6 @@ const Inspect: React.FC<IProps> = (props) => {
       }
       setCurrentDocument(d);
       if (documentEditor) {
-        console.log("setting doc ", d.state.content)
         documentEditor.setValue(JSON.stringify(d.state.content, null, 4));
       }
       if (d.metadata.schema) {
@@ -234,6 +232,20 @@ const Inspect: React.FC<IProps> = (props) => {
       schemaEditor.setValue(currentSchema ? JSON.stringify(currentSchema, null, 4) : "")
     }
   }, [currentSchema, schemaEditor]);
+
+  const documentChanged = () => {
+    setDirtyJSON(undefined);
+    setCurrentDocument(currentDocument);
+  }
+
+  // listen for document changes
+  useEffect(() => {
+    if (currentDocument) {
+      currentDocument.off("change", documentChanged);
+      currentDocument.once("change", documentChanged);
+    }
+  }, [currentDocument]); //eslint-disable-line
+
   return (
     <Mosaic<string>
       className={classNames("mosaic-blueprint-theme", darkMode.value ? Classes.DARK : undefined)}

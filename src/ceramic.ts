@@ -8,7 +8,7 @@ declare global {
 }
 
 export async function createCeramic(): Promise<CeramicApi> {
-  const ceramic = new Ceramic(process.env.REACT_APP_CERAMIC_API);
+  const ceramic = new Ceramic(process.env.REACT_APP_CERAMIC_API, {docSyncEnabled: true});
   window.ceramic = ceramic
   return Promise.resolve(ceramic as CeramicApi)
 }
