@@ -56,9 +56,7 @@ const Inspect: React.FC<IProps> = (props) => {
     const d = await window.ceramic?.loadDocument(newDocID);
     if (d) {
       setCurrentDocument(d);
-      console.log("setting doc", documentEditor);
       if (documentEditor) {
-        console.log("setting doc ", d.state.content)
         documentEditor.setValue(JSON.stringify(d.state.content, null, 4));
       }
       if (d.state.metadata.schema) {
@@ -232,19 +230,6 @@ const Inspect: React.FC<IProps> = (props) => {
       schemaEditor.setValue(currentSchema ? JSON.stringify(currentSchema, null, 4) : "")
     }
   }, [currentSchema, schemaEditor]);
-
-  const documentChanged = () => {
-    setDirtyJSON(undefined);
-    setCurrentDocument(currentDocument);
-  }
-
-  // listen for document changes
-  useEffect(() => {
-    if (currentDocument) {
-      currentDocument.off("change", documentChanged);
-      currentDocument.once("change", documentChanged);
-    }
-  }, [currentDocument]); //eslint-disable-line
 
   return (
     <Mosaic<string>
