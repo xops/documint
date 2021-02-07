@@ -115,7 +115,7 @@ const Inspect: React.FC<IProps> = (props) => {
 
   const ELEMENT_MAP: { [viewId: string]: (id: string | number, path: MosaicBranch[]) => JSX.Element } = {
     schema: (id, path) => (
-      <MosaicWindow<ViewId> path={path} title={`Schema ${currentDocument?.metadata.schema}`} >
+      <MosaicWindow<ViewId> path={path} title={`Schema ${currentDocument?.state.metadata.schema}`} >
         <CustomEditor
           editorDidMount={(editor: any) => {
             setSchemaEditor(editor)
@@ -166,7 +166,7 @@ const Inspect: React.FC<IProps> = (props) => {
       </MosaicWindow>
     ),
     versions: (id, path) => (
-      <MosaicWindow<ViewId> path={path} title={"Versions"}>
+      <MosaicWindow<ViewId> path={path} title={"Commit History"}>
         <List style={{ height: "100%", overflow: "auto" }}>
           {currentCommits && currentCommits.slice().reverse().map((commit, index) => (
             <ListItem button selected={selectedCommit ? (commit.cid === selectedCommit) : (index === 0)} onClick={() => handleVersionChange(commit.cid, index)}>
