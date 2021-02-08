@@ -259,6 +259,9 @@ const Inspect: React.FC<IProps> = (props) => {
     ) {
       loadDocument(documentID, false);
     }
+    if (!documentID) {
+      return;
+    }
     const l = await window.ceramic?.loadDocumentCommits(documentID);
     if (l) {
       setCurrentCommits(l);
