@@ -224,7 +224,7 @@ const Inspect: React.FC<IProps> = (props) => {
       } else {
         setCurrentSchema(undefined);
       }
-      if (d.state.log.length > 0) {
+      if (d.state.log.length > 0 && populateCurrentCommits) {
         const l = await window.ceramic?.loadDocumentCommits(docid);
         setCurrentCommits(l);
       }
@@ -266,7 +266,7 @@ const Inspect: React.FC<IProps> = (props) => {
     if (l) {
       setCurrentCommits(l);
     }
-  }, 30000)
+  }, 10000)
   return (
     <Mosaic<string>
       className={classNames("mosaic-blueprint-theme", darkMode.value ? Classes.DARK : undefined)}
