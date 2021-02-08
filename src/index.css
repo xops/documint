@@ -14,7 +14,7 @@ body,
 
 
 #root .mosaic-window .mosaic-window-toolbar, .mosaic-preview .mosaic-window-toolbar {
-  z-index: 1;
+  z-index: 2;
 }
 
 ::-webkit-scrollbar {

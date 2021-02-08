@@ -6,10 +6,12 @@ import { Mosaic, MosaicBranch, MosaicWindow, DEFAULT_CONTROLS_WITHOUT_CREATION }
 import DocID from "@ceramicnetwork/docid";
 import CustomEditor from '../components/CustomEditor';
 import { DocState, DoctypeUtils, Doctype } from '@ceramicnetwork/common';
-import { Button, List, ListItem, ListItemText, Typography, Tooltip, Chip } from "@material-ui/core";
+import { Button, List, ListItem, ListItemText, Typography, Tooltip, CircularProgress } from "@material-ui/core";
 import EditIcon from "@material-ui/icons/Edit"
 import { useParams, useHistory } from "react-router-dom";
 import useInterval from "use-interval";
+import StatusPill from "../components/StatusPill";
+import { grey, green, yellow, red } from "@material-ui/core/colors";
 export type ViewId = "schema" | "document" | "state" | "commits" | "new";
 
 interface IProps {
@@ -32,6 +34,13 @@ const anchorStatusMap: Record<string, string> = {
   3: "ANCHORED",
   4: "FAILED"
 }
+const anchorStatusMapToColor: Record<string, string> = {
+  "NOT_REQUESTED": grey[500],
+  "PENDING": yellow[800],
+  "PROCESSING": yellow[900],
+  "ANCHORED": green[500],
+  "FAILED": red[500]
+}
 
 const stateToJSON = (state: DocState | undefined) => {
   if (!state) {
@@ -46,6 +55,7 @@ const Inspect: React.FC<IProps> = (props) => {
   const history = useHistory();
 
   const darkMode = useDarkMode();
+  const [loading, setLoading] = useState<boolean>(false);
   const [currentDocument, setCurrentDocument] = useState<Doctype | undefined>();
   const [currentDocumentStateJSON, setCurrentDocumentStateJSON] = useState<any>();
   const [currentSchema, setCurrentSchema] = useState<any | undefined>();
@@ -66,6 +76,7 @@ const Inspect: React.FC<IProps> = (props) => {
       newDocID = DocID.fromOther(docID, commitCID);
       setSelectedCommit(commitCID);
     }
+    setLoading(true)
     const d = await window.ceramic?.loadDocument(newDocID);
     if (d) {
       setDirtyJSON(undefined);
@@ -84,6 +95,7 @@ const Inspect: React.FC<IProps> = (props) => {
         setCurrentSchema(undefined);
       }
     }
+    setLoading(false)
   };
 
   const handleSave = async () => {
@@ -97,6 +109,7 @@ const Inspect: React.FC<IProps> = (props) => {
       return;
     }
 
+    setLoading(true)
     if (!documentID) {
       try {
         const newDocument = await window.ceramic?.createDocument("tile", {
@@ -109,7 +122,9 @@ const Inspect: React.FC<IProps> = (props) => {
           setDirtyJSON(undefined);
           history.push("/" + newDocument.id.toString())
         }
+        setLoading(false);
       } catch (e) {
+        setLoading(false);
         alert(e.message);
       }
       return;
@@ -141,10 +156,14 @@ const Inspect: React.FC<IProps> = (props) => {
         dirtyJSON !== JSON.stringify(currentDocumentStateJSON?.next?.content || currentDocumentStateJSON?.content, null, 4) &&
           dirtyJSON && props.authenticated &&
           (!documentID || (window.did && currentDocumentStateJSON?.metadata.controllers.includes(window.did?.id)))
-          ? <Button variant="contained" color="secondary" style={{ height: "30px" }} onClick={handleSave}>Save</Button>
+          ? <Button variant="contained" color="secondary" style={{ height: "30px", marginRight: "10px" }} onClick={handleSave}>Save</Button>
           : undefined,
-        currentDocumentStateJSON && currentDocumentStateJSON.next && <Chip style={{ height: "25x" }} label={"NEXT"}></Chip>,
-        currentDocumentStateJSON && <Chip style={{ height: "25x" }} label={currentDocumentStateJSON?.anchorStatus}></Chip>,
+        loading && <CircularProgress size="20" style={{ marginTop: "5px", marginRight: "10px" }} variant="indeterminate"></CircularProgress>,
+        currentDocumentStateJSON && currentDocumentStateJSON.next && <StatusPill title="The 'next' property will contain the latest updates of the document before the've been anchored.">NEXT</StatusPill>,
+        currentDocumentStateJSON &&
+          <Tooltip title="Anchor Status" style={{zIndex: 1}}>
+            <StatusPill title="Anchor Status" style={{ background: anchorStatusMapToColor[currentDocumentStateJSON.anchorStatus] }}>{currentDocumentStateJSON.anchorStatus}</StatusPill>
+          </Tooltip>,
         (!documentID || (window.did && currentDocumentStateJSON?.metadata.controllers.includes(window.did?.id))) ? <Tooltip title="Document Editable"><EditIcon fontSize="small" style={{ color: "#a7b6c2", marginTop: "4px", marginRight: "7px", marginLeft: "15px" }} /></Tooltip> : undefined,
         ...DEFAULT_CONTROLS_WITHOUT_CREATION
       ]}>
@@ -205,6 +224,7 @@ const Inspect: React.FC<IProps> = (props) => {
       return;
     }
     try {
+      setLoading(true);
       const d = await window.ceramic?.loadDocument(docid);
       if (!d) {
         alert("no document found");
@@ -228,7 +248,9 @@ const Inspect: React.FC<IProps> = (props) => {
         const l = await window.ceramic?.loadDocumentCommits(docid);
         setCurrentCommits(l);
       }
+      setLoading(false);
     } catch (e) {
+      setLoading(false);
       //
     }
   };
