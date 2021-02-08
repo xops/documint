@@ -160,10 +160,7 @@ const Inspect: React.FC<IProps> = (props) => {
           : undefined,
         loading && <CircularProgress size="20" style={{ marginTop: "5px", marginRight: "10px" }} variant="indeterminate"></CircularProgress>,
         currentDocumentStateJSON && currentDocumentStateJSON.next && <StatusPill title="The 'next' property will contain the latest updates of the document before the've been anchored.">NEXT</StatusPill>,
-        currentDocumentStateJSON &&
-          <Tooltip title="Anchor Status" style={{zIndex: 1}}>
-            <StatusPill title="Anchor Status" style={{ background: anchorStatusMapToColor[currentDocumentStateJSON.anchorStatus] }}>{currentDocumentStateJSON.anchorStatus}</StatusPill>
-          </Tooltip>,
+        currentDocumentStateJSON && <StatusPill title="Anchor Status" style={{ background: anchorStatusMapToColor[currentDocumentStateJSON.anchorStatus] }}>{currentDocumentStateJSON.anchorStatus}</StatusPill>,
         (!documentID || (window.did && currentDocumentStateJSON?.metadata.controllers.includes(window.did?.id))) ? <Tooltip title="Document Editable"><EditIcon fontSize="small" style={{ color: "#a7b6c2", marginTop: "4px", marginRight: "7px", marginLeft: "15px" }} /></Tooltip> : undefined,
         ...DEFAULT_CONTROLS_WITHOUT_CREATION
       ]}>

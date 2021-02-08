@@ -16,12 +16,11 @@ interface IProps {
 const CustomEditor: React.FC<IProps> = (props) => {
   const [editor, setEditor] = useState<any>();
   useEffect(() => {
-    if (editor !== undefined && props.value !== editor.getValue()) {
+    if (editor !== undefined && props.value && props.value !== editor.getValue()) {
       const modelUriString = `inmemory://json-${Math.random()}.json`;
       const modelUri = monaco.Uri.parse(modelUriString);
       try {
         const model = monaco.editor.createModel(props.value || "", "json", modelUri);
-        console.log("set model");
         editor.setModel(model);
         if (modelUri) {
           addDiagnostics(modelUri.toString(), props.schema || true, monaco);
