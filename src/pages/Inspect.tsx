@@ -6,9 +6,10 @@ import { Mosaic, MosaicBranch, MosaicWindow, DEFAULT_CONTROLS_WITHOUT_CREATION }
 import DocID from "@ceramicnetwork/docid";
 import CustomEditor from '../components/CustomEditor';
 import { DocState, DoctypeUtils, Doctype } from '@ceramicnetwork/common';
-import { Button, List, ListItem, ListItemText, Typography, Tooltip } from "@material-ui/core";
+import { Button, List, ListItem, ListItemText, Typography, Tooltip, Chip } from "@material-ui/core";
 import EditIcon from "@material-ui/icons/Edit"
 import { useParams, useHistory } from "react-router-dom";
+import useInterval from "use-interval";
 export type ViewId = "schema" | "document" | "state" | "commits" | "new";
 
 interface IProps {
@@ -24,11 +25,21 @@ const commitsToJSON = (commits: any[]) => {
   });
 }
 
+const anchorStatusMap: Record<string, string> = {
+  0: "NOT_REQUESTED",
+  1: "PENDING",
+  2: "PROCESSING",
+  3: "ANCHORED",
+  4: "FAILED"
+}
+
 const stateToJSON = (state: DocState | undefined) => {
   if (!state) {
     return;
   }
-  return DoctypeUtils.serializeState(state);
+  const serialized = DoctypeUtils.serializeState(state);
+  serialized.anchorStatus = anchorStatusMap[serialized.anchorStatus] || serialized.anchorStatus;
+  return serialized
 }
 const Inspect: React.FC<IProps> = (props) => {
   const { documentID } = useParams();
@@ -36,6 +47,7 @@ const Inspect: React.FC<IProps> = (props) => {
 
   const darkMode = useDarkMode();
   const [currentDocument, setCurrentDocument] = useState<Doctype | undefined>();
+  const [currentDocumentStateJSON, setCurrentDocumentStateJSON] = useState<any>();
   const [currentSchema, setCurrentSchema] = useState<any | undefined>();
   const [currentCommits, setCurrentCommits] = useState<Record<string, any>[] | undefined>();
   const [selectedCommit, setSelectedCommit] = useState<any>();
@@ -46,6 +58,7 @@ const Inspect: React.FC<IProps> = (props) => {
   const handleVersionChange = async (commitCID: string, index: number) => {
     const docID = DocID.fromString(documentID);
     let newDocID;
+    console.log("index in version change", index);
     if (index === 0) {
       newDocID = docID;
       setSelectedCommit(undefined);
@@ -55,9 +68,10 @@ const Inspect: React.FC<IProps> = (props) => {
     }
     const d = await window.ceramic?.loadDocument(newDocID);
     if (d) {
+      setDirtyJSON(undefined);
       setCurrentDocument(d);
       if (documentEditor) {
-        documentEditor.setValue(JSON.stringify(d.state.content, null, 4));
+        documentEditor.setValue(JSON.stringify(d.state.next?.content || d.state.content, null, 4));
       }
       if (d.state.metadata.schema) {
         const r = await window.ceramic?.loadDocument(d.state.metadata.schema);
@@ -70,7 +84,6 @@ const Inspect: React.FC<IProps> = (props) => {
         setCurrentSchema(undefined);
       }
     }
-    setDirtyJSON(undefined);
   };
 
   const handleSave = async () => {
@@ -104,18 +117,17 @@ const Inspect: React.FC<IProps> = (props) => {
 
     if (props.authenticated && currentDocument && typeof dirtyJSON === "string") {
       try {
-        await currentDocument.change({ content: JSON.parse(dirtyJSON || "") })
         setDirtyJSON(undefined);
+        await currentDocument.change({ content: JSON.parse(dirtyJSON || "") })
         loadDocument(documentID);
       } catch (e) {
         alert(e.message);
       }
     }
   };
-
   const ELEMENT_MAP: { [viewId: string]: (id: string | number, path: MosaicBranch[]) => JSX.Element } = {
     schema: (id, path) => (
-      <MosaicWindow<ViewId> path={path} title={`Schema ${currentDocument?.state.metadata.schema}`} >
+      <MosaicWindow<ViewId> path={path} title={`Schema ${currentDocumentStateJSON?.metadata.schema}`} >
         <CustomEditor
           editorDidMount={(editor: any) => {
             setSchemaEditor(editor)
@@ -126,16 +138,18 @@ const Inspect: React.FC<IProps> = (props) => {
     ),
     document: (id, path) => (
       <MosaicWindow<ViewId> path={path} title={"Document"} toolbarControls={[
-        dirtyJSON !== JSON.stringify(currentDocument?.state.content, null, 4) &&
+        dirtyJSON !== JSON.stringify(currentDocumentStateJSON?.next?.content || currentDocumentStateJSON?.content, null, 4) &&
           dirtyJSON && props.authenticated &&
-          (!documentID || (window.did && currentDocument?.state.metadata.controllers.includes(window.did?.id)))
+          (!documentID || (window.did && currentDocumentStateJSON?.metadata.controllers.includes(window.did?.id)))
           ? <Button variant="contained" color="secondary" style={{ height: "30px" }} onClick={handleSave}>Save</Button>
           : undefined,
-        (!documentID || (window.did && currentDocument?.state.metadata.controllers.includes(window.did?.id))) ? <Tooltip title="Document Editable"><EditIcon fontSize="small" style={{ color: "#a7b6c2", marginTop: "4px", marginRight: "7px", marginLeft: "15px" }} /></Tooltip> : undefined,
+        currentDocumentStateJSON && currentDocumentStateJSON.next && <Chip style={{ height: "25x" }} label={"NEXT"}></Chip>,
+        currentDocumentStateJSON && <Chip style={{ height: "25x" }} label={currentDocumentStateJSON?.anchorStatus}></Chip>,
+        (!documentID || (window.did && currentDocumentStateJSON?.metadata.controllers.includes(window.did?.id))) ? <Tooltip title="Document Editable"><EditIcon fontSize="small" style={{ color: "#a7b6c2", marginTop: "4px", marginRight: "7px", marginLeft: "15px" }} /></Tooltip> : undefined,
         ...DEFAULT_CONTROLS_WITHOUT_CREATION
       ]}>
         <CustomEditor
-          value={(currentDocument && JSON.stringify(currentDocument.state.content, null, 4))}
+          value={(currentDocumentStateJSON && JSON.stringify(currentDocumentStateJSON?.next?.content || currentDocumentStateJSON.content, null, 4))}
           editorDidMount={(editor: any) => {
             setDocumentEditor(editor)
           }}
@@ -144,7 +158,7 @@ const Inspect: React.FC<IProps> = (props) => {
             setDirtyJSON(value);
           }}
           editorOptions={{
-            readOnly: (props.authenticated && (!documentID || (window.did && currentDocument?.state.metadata.controllers.includes(window.did?.id)))) ? false : true
+            readOnly: (props.authenticated && (!documentID || (window.did && currentDocumentStateJSON?.metadata.controllers.includes(window.did?.id)))) ? false : true
           }}
         />
       </MosaicWindow>
@@ -153,7 +167,7 @@ const Inspect: React.FC<IProps> = (props) => {
       return (
         <MosaicWindow<ViewId> path={path} title={"State"}>
           <CustomEditor
-            value={JSON.stringify(stateToJSON(currentDocument?.state), null, 4) || ""}
+            value={JSON.stringify(currentDocumentStateJSON, null, 4) || ""}
           />
         </MosaicWindow>
       )
@@ -182,7 +196,7 @@ const Inspect: React.FC<IProps> = (props) => {
     )
   };
 
-  const loadDocument = async (docid: string) => { //eslint-disable-line
+  const loadDocument = async (docid: string, populateCurrentCommits: boolean = true) => { //eslint-disable-line
     if (!docid || docid === "") {
       setCurrentSchema(undefined);
       setCurrentDocument(undefined);
@@ -197,8 +211,8 @@ const Inspect: React.FC<IProps> = (props) => {
         return;
       }
       setCurrentDocument(d);
-      if (documentEditor) {
-        documentEditor.setValue(JSON.stringify(d.state.content, null, 4));
+      if (documentEditor && documentEditor.getValue() !== JSON.stringify(d.state.next?.content || d.state.content, null, 4)) {
+        documentEditor.setValue(JSON.stringify(d.state.next?.content || d.state.content, null, 4));
       }
       if (d.metadata.schema) {
         const r = await window.ceramic?.loadDocument(d.metadata.schema);
@@ -220,17 +234,36 @@ const Inspect: React.FC<IProps> = (props) => {
   };
 
   useEffect(() => {
+    if (currentDocument) {
+      setCurrentDocumentStateJSON(stateToJSON(currentDocument.state))
+    }
+  }, [currentDocument]); //eslint-disable-line
+
+  useEffect(() => {
     if (window.ceramic) {
       loadDocument(documentID);
     }
   }, [documentID]); //eslint-disable-line
 
   useEffect(() => {
-    if (schemaEditor) {
+    if (schemaEditor && schemaEditor.getValue() !== (JSON.stringify(currentSchema, null, 4) || "")) {
       schemaEditor.setValue(currentSchema ? JSON.stringify(currentSchema, null, 4) : "")
     }
   }, [currentSchema, schemaEditor]);
-
+  useInterval(async () => {
+    if (!window.ceramic) {
+      return;
+    }
+    if ((!dirtyJSON || dirtyJSON === JSON.stringify(currentDocumentStateJSON?.next?.content || currentDocumentStateJSON?.content, null, 4)) &&
+      (!currentCommits || !selectedCommit || (currentCommits && selectedCommit === currentCommits.slice().reverse()[0]?.cid))
+    ) {
+      loadDocument(documentID, false);
+    }
+    const l = await window.ceramic?.loadDocumentCommits(documentID);
+    if (l) {
+      setCurrentCommits(l);
+    }
+  }, 30000)
   return (
     <Mosaic<string>
       className={classNames("mosaic-blueprint-theme", darkMode.value ? Classes.DARK : undefined)}

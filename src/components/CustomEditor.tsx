@@ -10,16 +10,18 @@ interface IProps {
   schema?: any;
   editorDidMount?: any;
   editorOptions?: any;
+  readOnly?: boolean;
 }
 
 const CustomEditor: React.FC<IProps> = (props) => {
   const [editor, setEditor] = useState<any>();
   useEffect(() => {
-    if (editor !== undefined) {
-      const modelUriString = `inmemory://json-${props.value}-${Math.random()}.json`;
+    if (editor !== undefined && props.value !== editor.getValue()) {
+      const modelUriString = `inmemory://json-${Math.random()}.json`;
       const modelUri = monaco.Uri.parse(modelUriString);
       try {
         const model = monaco.editor.createModel(props.value || "", "json", modelUri);
+        console.log("set model");
         editor.setModel(model);
         if (modelUri) {
           addDiagnostics(modelUri.toString(), props.schema || true, monaco);
@@ -43,7 +45,6 @@ const CustomEditor: React.FC<IProps> = (props) => {
       }}
       language="json"
       options={{
-        readOnly: true,
         scrollbar: {
           // Render vertical arrows. Defaults to false.
           verticalHasArrows: true,
@@ -67,11 +68,11 @@ const CustomEditor: React.FC<IProps> = (props) => {
         },
         automaticLayout: true,
         showFoldingControls: "always",
-        peekWidgetDefaultFocus: true,
+        peekWidgetDefaultFocus: "editor",
         scrollBeyondLastLine: false,
         lineNumbers: "off",
         fixedOverflowWidgets: true,
-        ...props.editorOptions,
+        ...props.editorOptions
       }}
     />
   );
