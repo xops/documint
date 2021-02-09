@@ -59,7 +59,7 @@ const Inspect: React.FC<IProps> = (props) => {
   const [currentDocument, setCurrentDocument] = useState<Doctype | undefined>();
   const [currentDocumentStateJSON, setCurrentDocumentStateJSON] = useState<any>();
   const [currentSchema, setCurrentSchema] = useState<any | undefined>();
-  const [currentSchemaDocID, setCurrentSchemaDocID] = useState<string | undefined>();
+  const [currentSchemaDocID, setCurrentSchemaDocID] = useState<DocID | undefined>();
   const [currentCommits, setCurrentCommits] = useState<Record<string, any>[] | undefined>();
   const [selectedSchemaCommit, setSelectedSchemaCommit] = useState<any | undefined>();
   const [selectedCommit, setSelectedCommit] = useState<any>();
@@ -74,8 +74,8 @@ const Inspect: React.FC<IProps> = (props) => {
 
     const d = await window.ceramic?.loadDocument(schemaDocID);
     if (d) {
-      setCurrentSchemaDocID(schemaDocID);
-      setSelectedSchemaCommit(d.state.log[d.state.log.length - 1].cid.toString());
+      setCurrentSchemaDocID(d.id.baseID);
+      setSelectedSchemaCommit(d.state.log[d.state.log.length - 1]);
       setCurrentSchema(d);
     }
   };
@@ -83,7 +83,7 @@ const Inspect: React.FC<IProps> = (props) => {
   const handleVersionChange = async (commitCID: string, index: number) => {
     const docID = DocID.fromString(documentID);
     let newDocID;
-    console.log("index in version change", index);
+
     if (index === 0) {
       newDocID = docID;
       setSelectedCommit(undefined);
@@ -108,8 +108,8 @@ const Inspect: React.FC<IProps> = (props) => {
     setLoading(false)
   };
 
-  const handleSchemaCommitChange = async (commitCID: string) => {
-    setSelectedSchemaCommit(commitCID);
+  const handleSchemaCommitChange = async (commit: any) => {
+    setSelectedSchemaCommit(commit);
   };
 
   const handleSave = async () => {
@@ -125,7 +125,9 @@ const Inspect: React.FC<IProps> = (props) => {
 
     let schemaDocIDLockedToCommit;
     if (currentSchemaDocID) {
-      schemaDocIDLockedToCommit = DocID.fromOther(DocID.fromString(currentSchemaDocID), selectedSchemaCommit).toString();
+      console.log("string commit id" + selectedSchemaCommit, currentSchemaDocID);
+      schemaDocIDLockedToCommit = DocID.fromOther(currentSchemaDocID, selectedSchemaCommit.cid.toString()).toString();
+      console.log(schemaDocIDLockedToCommit);
     }
 
     setLoading(true)
@@ -150,10 +152,23 @@ const Inspect: React.FC<IProps> = (props) => {
       return;
     }
 
-    if (props.authenticated && currentDocument && typeof dirtyJSON === "string") {
+    if (props.authenticated && currentDocument) {
       try {
-        setDirtyJSON(undefined);
-        await currentDocument.change({ content: JSON.parse(dirtyJSON || ""), metadata: { ...currentDocument.metadata, schema: schemaDocIDLockedToCommit } })
+        const update: { [k: string]: any } = {};
+
+        if (dirtyJSON) {
+          setDirtyJSON(undefined);
+          update.content = JSON.parse(dirtyJSON || "");
+        }
+
+        if (currentDocument.metadata.schema !== schemaDocIDLockedToCommit) {
+          update.metadata = {
+            schema: schemaDocIDLockedToCommit
+          };
+        }
+
+        await currentDocument.change(update)
+
         loadDocument(documentID);
       } catch (e) {
         alert(e.message);
@@ -177,9 +192,16 @@ const Inspect: React.FC<IProps> = (props) => {
     if (docHasChanged) { return true; }
 
     if (!currentSchema) { return false; }
-    const currentDocSchema = currentDocumentStateJSON?.state?.schema?.replace("ceramic://");
-    if (currentDocSchema !== currentSchemaDocID) {
-      return true;
+    const currentDocSchema = currentDocument?.metadata?.schema;
+    if (currentDocSchema && currentSchemaDocID) {
+      const currentDocSchemaDocID = DocID.fromString(currentDocSchema);
+
+      const currentSchemaDocIDLockedToCommit = DocID.fromOther(currentSchemaDocID, selectedSchemaCommit.cid.toString());
+
+      console.log('should show save::' + currentDocSchemaDocID + " vs " + currentSchemaDocIDLockedToCommit);
+      if (currentDocSchemaDocID.equals(currentSchemaDocIDLockedToCommit) === false) {
+        return true;
+      }
     }
 
     /* const docHasSchema = currentDocumentStateJSON?.metadata.schema;
@@ -194,6 +216,14 @@ const Inspect: React.FC<IProps> = (props) => {
      * const schemaChanged = currentSchemaDocID !== currentDocumentStateJSON?.metadata.schema.replace("ceramic://");
      * console.log(schemaChanged);
      * debugger; // eslint-disable-line */
+  };
+
+  const isSelectedCommit = (commit: any, selected: any): boolean => {
+    console.log(commit, selected);
+    if (!selected || !commit.cid) {
+      return false;
+    }
+    return commit.cid === selected.cid;
   };
 
   const ELEMENT_MAP: { [viewId: string]: (id: string | number, path: MosaicBranch[]) => JSX.Element } = {
@@ -251,7 +281,7 @@ const Inspect: React.FC<IProps> = (props) => {
       <MosaicWindow<ViewId> path={path} title={"Commit History"}>
         <List style={{ height: "100%", overflow: "auto" }}>
           {currentCommits && currentCommits.slice().reverse().map((commit, index) => (
-            <ListItem button selected={selectedCommit ? (commit.cid === selectedCommit) : (index === 0)} onClick={() => handleVersionChange(commit.cid, index)}>
+            <ListItem button selected={isSelectedCommit(commit, selectedCommit)} onClick={() => handleVersionChange(commit.cid, index)}>
               <ListItemText>
                 <Typography color="secondary" style={{ fontSize: "11px" }}>
                   {commit.cid} {index === 0 ? "(latest)" : null}
@@ -267,7 +297,7 @@ const Inspect: React.FC<IProps> = (props) => {
         <InputBase placeholder="Enter Document ID" value={currentSchemaDocID} style={{paddingLeft: "5px"}} fullWidth onChange={(ev) => handleSchemaDocIDChange(ev.target.value)}></InputBase>
         <List style={{ height: "100%", overflow: "auto" }}>
           {currentSchema && currentSchema.state && currentSchema.state.log.slice().reverse().map((commit: any, index: any) => (
-            <ListItem button selected={selectedSchemaCommit ? (commit.cid === selectedSchemaCommit) : (index === 0)} onClick={() => handleSchemaCommitChange(commit)}>
+            <ListItem button selected={isSelectedCommit(commit, selectedSchemaCommit)} onClick={() => handleSchemaCommitChange(commit)}>
               <ListItemText>
                 <Typography color="secondary" style={{ fontSize: "11px" }}>
                   {commit.cid.toString()} {index === 0 ? "(latest)" : null}
@@ -278,6 +308,19 @@ const Inspect: React.FC<IProps> = (props) => {
         </List>
       </MosaicWindow>
     )
+  };
+
+  const updateCommitList = async (docID: string, selectLatest = false) => {
+    const l = await window.ceramic?.loadDocumentCommits(docID);
+    if (l) {
+      if (!selectedCommit || selectLatest) {
+        setSelectedCommit(l[l.length - 1]);
+      }
+      setCurrentCommits(l);
+    } else {
+      setCurrentCommits([]);
+      setSelectedCommit(undefined);
+    }
   };
 
   const loadDocument = async (docid: string, populateCurrentCommits: boolean = true) => { //eslint-disable-line
@@ -299,15 +342,18 @@ const Inspect: React.FC<IProps> = (props) => {
       if (documentEditor && documentEditor.getValue() !== JSON.stringify(d.state.next?.content || d.state.content, null, 4)) {
         documentEditor.setValue(JSON.stringify(d.state.next?.content || d.state.content, null, 4));
       }
-      if (d.state.metadata.schema) {
-        handleSchemaDocIDChange(d.state.metadata.schema);
+
+      const schema = d.metadata.schema;
+      if (schema) {
+        await handleSchemaDocIDChange(schema);
       } else {
         setCurrentSchema(undefined);
       }
-      if (d.state.log.length > 0 && populateCurrentCommits) {
-        const l = await window.ceramic?.loadDocumentCommits(docid);
-        setCurrentCommits(l);
+
+      if (populateCurrentCommits) {
+        await updateCommitList(docid, true);
       }
+
       setLoading(false);
     } catch (e) {
       setLoading(false);
@@ -316,7 +362,7 @@ const Inspect: React.FC<IProps> = (props) => {
   };
 
   useEffect(() => {
-    if (currentDocument) {
+    if (currentDocument && currentDocument.state) {
       setCurrentDocumentStateJSON(stateToJSON(currentDocument.state))
     }
   }, [currentDocument]); //eslint-disable-line
@@ -328,7 +374,7 @@ const Inspect: React.FC<IProps> = (props) => {
   }, [documentID]); //eslint-disable-line
 
   useEffect(() => {
-    if (!currentSchema) { return; }
+    if (currentSchema === undefined || currentSchema.state === undefined || currentSchema.state.content === undefined) { return; }
     const schemaContentStr = JSON.stringify(currentSchema.state.content, null, 4);
     if (schemaEditor && schemaEditor.getValue() !== schemaContentStr) {
       schemaEditor.setValue(schemaContentStr);
@@ -340,22 +386,29 @@ const Inspect: React.FC<IProps> = (props) => {
       return;
     }
 
-    if (!documentID) {
-      return;
-    }
-
-    if ((!dirtyJSON || dirtyJSON === JSON.stringify(currentDocumentStateJSON?.next?.content || currentDocumentStateJSON?.content, null, 4)) &&
-      (!currentCommits || !selectedCommit || (currentCommits && selectedCommit === currentCommits.slice().reverse()[0]?.cid))
-    ) {
-      loadDocument(documentID, false);
-    }
-
+    if (currentDocument === undefined || currentDocument.state === undefined) { return; }
 
     const l = await window.ceramic?.loadDocumentCommits(documentID);
-    if (l) {
-      setCurrentCommits(l);
+    const currentLogs = currentDocument?.state?.log.map((log) => log.cid.toString());
+
+    const hasNew = l.reduce((newL, log) => {
+      if (currentLogs.indexOf(log.cid.toString()) === -1) {
+        return true;
+      }
+      return newL;
+    }, false);
+
+    if (hasNew) {
+      await updateCommitList(documentID);
     }
-  }, 10000)
+
+    /* if ((!dirtyJSON || dirtyJSON === JSON.stringify(currentDocumentStateJSON?.next?.content || currentDocumentStateJSON?.content, null, 4)) &&
+     *   (!currentCommits || !selectedCommit || (currentCommits && selectedCommit === currentCommits.slice().reverse()[0]?.cid))
+     * ) {
+     *   loadDocument(documentID, false);
+     * } */
+  }, 10000);
+
   return (
     <Mosaic<string>
       className={classNames("mosaic-blueprint-theme", darkMode.value ? Classes.DARK : undefined)}
