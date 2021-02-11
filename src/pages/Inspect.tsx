@@ -56,6 +56,7 @@ const Inspect: React.FC<IProps> = (props) => {
 
   const darkMode = useDarkMode();
   const [loading, setLoading] = useState<boolean>(false);
+  const [currentDocID, setCurrentDocID] = useState<string | undefined>();
   const [currentDocument, setCurrentDocument] = useState<Doctype | undefined>();
   const [currentDocumentStateJSON, setCurrentDocumentStateJSON] = useState<any>();
   const [currentSchema, setCurrentSchema] = useState<any | undefined>();
@@ -82,13 +83,13 @@ const Inspect: React.FC<IProps> = (props) => {
     }
   };
 
-  const handleVersionChange = async (commitCID: string, index: number) => {
+  const handleVersionChange = async (commitCID: string) => {
     const docID = DocID.fromString(documentID);
     let newDocID;
 
-    if (index === 0) {
+    if (commitCID === docID.commit?.toString()) {
       newDocID = docID;
-      setSelectedCommit(undefined);
+      setSelectedCommit(newDocID.commit);
     } else {
       newDocID = DocID.fromOther(docID, commitCID);
       setSelectedCommit(commitCID);
@@ -98,6 +99,7 @@ const Inspect: React.FC<IProps> = (props) => {
     if (d) {
       setDirtyJSON(undefined);
       setCurrentDocument(d);
+      setCurrentDocID(newDocID.toString())
       if (documentEditor) {
         documentEditor.setValue(JSON.stringify(d.state.next?.content || d.state.content, null, 4));
       }
@@ -154,7 +156,7 @@ const Inspect: React.FC<IProps> = (props) => {
       return;
     }
 
-    if (props.authenticated && currentDocument) {
+    if (props.authenticated && currentDocument && currentDocID) {
       try {
         const update: { [k: string]: any } = {};
 
@@ -165,13 +167,14 @@ const Inspect: React.FC<IProps> = (props) => {
 
         if (currentDocument.metadata.schema !== schemaDocIDLockedToCommit) {
           update.metadata = {
-            schema: schemaDocIDLockedToCommit
+            schema: schemaDocIDLockedToCommit,
+            controllers: [window.did.id]
           };
         }
 
         await currentDocument.change(update)
 
-        loadDocument(documentID);
+        loadDocument(currentDocument.id.toString());
       } catch (e) {
         alert(e.message);
       }
@@ -200,7 +203,6 @@ const Inspect: React.FC<IProps> = (props) => {
 
       const currentSchemaDocIDLockedToCommit = DocID.fromOther(currentSchemaDocID, selectedSchemaCommit.cid.toString());
 
-      console.log('should show save::' + currentDocSchemaDocID + " vs " + currentSchemaDocIDLockedToCommit);
       if (currentDocSchemaDocID.equals(currentSchemaDocIDLockedToCommit) === false) {
         return true;
       }
@@ -221,10 +223,10 @@ const Inspect: React.FC<IProps> = (props) => {
   };
 
   const isSelectedCommit = (commit: any, selected: any): boolean => {
-    if (!selected || !commit.cid) {
+    if (!selected || !commit.cid || !selected.cid) {
       return false;
     }
-    return commit.cid === selected.cid;
+    return commit.cid.toString() === selected.cid.toString();
   };
 
   const ELEMENT_MAP: { [viewId: string]: (id: string | number, path: MosaicBranch[]) => JSX.Element } = {
@@ -282,9 +284,9 @@ const Inspect: React.FC<IProps> = (props) => {
       <MosaicWindow<ViewId> path={path} title={"Commit History"}>
         <List style={{ height: "100%", overflow: "auto" }}>
           {currentCommits && currentCommits.slice().reverse().map((commit, index) => (
-            <ListItem button selected={isSelectedCommit(commit, selectedCommit)} onClick={() => handleVersionChange(commit.cid, index)}>
+            <ListItem button selected={isSelectedCommit(commit, {cid: selectedCommit})} onClick={() => handleVersionChange(commit.cid)}>
               <ListItemText>
-                <Typography color="secondary" style={{ fontSize: "11px" }}>
+                <Typography color={index === 0 ? "secondary" : "textPrimary"} style={{ fontSize: "11px" }}>
                   {commit.cid} {index === 0 ? "(latest)" : null}
                 </Typography>
               </ListItemText>
@@ -295,7 +297,7 @@ const Inspect: React.FC<IProps> = (props) => {
     ),
     schemaPicker: (id, path) => (
       <MosaicWindow<ViewId> path={path} title={"Schema Commit Picker"}>
-        <InputBase placeholder="Enter Document ID" value={currentSchemaDocID} style={{paddingLeft: "5px"}} fullWidth onChange={(ev) => handleSchemaDocIDChange(ev.target.value)}></InputBase>
+        <InputBase placeholder="Enter Document ID" value={currentSchemaDocID} style={{ paddingLeft: "5px" }} fullWidth onChange={(ev) => handleSchemaDocIDChange(ev.target.value)}></InputBase>
         <List style={{ height: "100%", overflow: "auto" }}>
           {currentSchema && currentSchema.state && currentSchema.state.log.slice().reverse().map((commit: any, index: any) => (
             <ListItem button selected={isSelectedCommit(commit, selectedSchemaCommit)} onClick={() => handleSchemaCommitChange(commit)}>
@@ -339,6 +341,11 @@ const Inspect: React.FC<IProps> = (props) => {
         alert("no document found");
         return;
       }
+      // if same doc return early
+      if (currentDocument && JSON.stringify(currentDocument.state.content) === JSON.stringify(d.state.content) && currentDocument.state.anchorStatus === d.state.anchorStatus && currentDocument.id.toString() === d.id.toString()) {
+        setLoading(false);
+        return;
+      }
       setCurrentDocument(d);
       if (documentEditor && documentEditor.getValue() !== JSON.stringify(d.state.next?.content || d.state.content, null, 4)) {
         documentEditor.setValue(JSON.stringify(d.state.next?.content || d.state.content, null, 4));
@@ -353,6 +360,7 @@ const Inspect: React.FC<IProps> = (props) => {
 
       if (populateCurrentCommits) {
         await updateCommitList(docid, true);
+        setSelectedCommit(d.commitId.commit);
       }
 
       setLoading(false);
@@ -368,8 +376,10 @@ const Inspect: React.FC<IProps> = (props) => {
     }
   }, [currentDocument]); //eslint-disable-line
 
+
   useEffect(() => {
     if (window.ceramic) {
+      setCurrentDocID(documentID);
       loadDocument(documentID);
     }
   }, [documentID]); //eslint-disable-line
@@ -403,11 +413,9 @@ const Inspect: React.FC<IProps> = (props) => {
       await updateCommitList(documentID);
     }
 
-    /* if ((!dirtyJSON || dirtyJSON === JSON.stringify(currentDocumentStateJSON?.next?.content || currentDocumentStateJSON?.content, null, 4)) &&
-     *   (!currentCommits || !selectedCommit || (currentCommits && selectedCommit === currentCommits.slice().reverse()[0]?.cid))
-     * ) {
-     *   loadDocument(documentID, false);
-     * } */
+    if ((!dirtyJSON || dirtyJSON === JSON.stringify(currentDocumentStateJSON?.next?.content || currentDocumentStateJSON?.content, null, 4)) && currentDocID) {
+      loadDocument(currentDocID, false);
+    }
   }, 10000);
 
   return (
@@ -430,12 +438,12 @@ const Inspect: React.FC<IProps> = (props) => {
           splitPercentage: 80,
           first: {
             direction: "column",
-            splitPercentage: 80,
+            splitPercentage: 50,
             first: {
               direction: "column",
               first: "versions",
               second: "state",
-              splitPercentage: 20
+              splitPercentage: 50
             },
             second: {
               direction: "column",
