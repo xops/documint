@@ -6,7 +6,7 @@ import { Mosaic, MosaicBranch, MosaicWindow, DEFAULT_CONTROLS_WITHOUT_CREATION }
 import DocID from "@ceramicnetwork/docid";
 import CustomEditor from '../components/CustomEditor';
 import { DocState, DoctypeUtils, Doctype } from '@ceramicnetwork/common';
-import { InputBase, Button, List, ListItem, ListItemText, Typography, Tooltip, CircularProgress } from "@material-ui/core";
+import { InputBase, Button, List, ListItem, ListItemText, Typography, Tooltip, CircularProgress, Paper } from "@material-ui/core";
 import EditIcon from "@material-ui/icons/Edit"
 import { useParams, useHistory } from "react-router-dom";
 import useInterval from "use-interval";
@@ -284,7 +284,7 @@ const Inspect: React.FC<IProps> = (props) => {
       <MosaicWindow<ViewId> path={path} title={"Commit History"}>
         <List style={{ height: "100%", overflow: "auto" }}>
           {currentCommits && currentCommits.slice().reverse().map((commit, index) => (
-            <ListItem button selected={isSelectedCommit(commit, {cid: selectedCommit})} onClick={() => handleVersionChange(commit.cid)}>
+            <ListItem button selected={isSelectedCommit(commit, { cid: selectedCommit })} onClick={() => handleVersionChange(commit.cid)}>
               <ListItemText>
                 <Typography color={index === 0 ? "secondary" : "textSecondary"} style={{ fontSize: "11px" }}>
                   {commit.cid} {index === 0 ? "(latest)" : null}
@@ -297,7 +297,13 @@ const Inspect: React.FC<IProps> = (props) => {
     ),
     schemaPicker: (id, path) => (
       <MosaicWindow<ViewId> path={path} title={"Schema Commit Picker"}>
-        <InputBase placeholder="Enter Document ID" value={currentSchemaDocID} style={{ paddingLeft: "5px" }} fullWidth onChange={(ev) => handleSchemaDocIDChange(ev.target.value)}></InputBase>
+        <Paper style={{
+          background: "rgba(0, 0, 0, 0.2)",
+          padding: "0px 3px 0px 1px",
+          margin: "3px"
+        }} elevation={0}>
+          <InputBase placeholder="Enter Document ID" value={currentSchemaDocID} style={{ paddingLeft: "5px" }} fullWidth onChange={(ev) => handleSchemaDocIDChange(ev.target.value)} />
+        </Paper>
         <List style={{ height: "100%", overflow: "auto" }}>
           {currentSchema && currentSchema.state && currentSchema.state.log.slice().reverse().map((commit: any, index: any) => (
             <ListItem button selected={isSelectedCommit(commit, selectedSchemaCommit)} onClick={() => handleSchemaCommitChange(commit)}>

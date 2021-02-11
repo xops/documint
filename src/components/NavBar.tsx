@@ -41,7 +41,7 @@ const NavBar: React.FC<IProps> = (props) => {
           </Grid>
           <Grid container justify="center" alignItems="center" item xs={7} >
             <Paper style={{
-              background: "rgba(0, 0, 0, 0.1)",
+              background: "rgba(0, 0, 0, 0.2)",
               padding: "0px 10px 0px 10px",
               width: "100%",
             }} elevation={0}>
