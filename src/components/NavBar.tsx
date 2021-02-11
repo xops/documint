@@ -4,7 +4,6 @@ import type { ImageMetadata } from '@ceramicstudio/idx-constants'
 
 import Brightness3Icon from "@material-ui/icons/Brightness3";
 import WbSunnyIcon from "@material-ui/icons/WbSunny";
-import { grey } from "@material-ui/core/colors";
 import { formatDID } from "../utils";
 import { useHistory, useParams } from "react-router-dom";
 
@@ -32,11 +31,11 @@ const NavBar: React.FC<IProps> = (props) => {
         <Grid alignItems="center" container>
           <Grid item sm={2} direction="row" container>
             <Grid>
-              <img src="https://developers.ceramic.network/images/ceramic-no-shadow.png" alt="ceramic" height="24" />
+              <img src="/images/documint_logo1.png" alt="ceramic" height="24" />
             </Grid>
             <Grid>
-              <Typography style={{ flexGrow: 1, color: "#fff", marginLeft: "10px" }}>
-                Ceramic Playground
+              <Typography style={{ flexGrow: 1,  marginLeft: "10px" }}>
+                Documint
                </Typography>
             </Grid>
           </Grid>
@@ -46,7 +45,7 @@ const NavBar: React.FC<IProps> = (props) => {
               padding: "0px 10px 0px 10px",
               width: "100%",
             }} elevation={0}>
-              <InputBase inputProps={{ spellCheck: false }} value={documentID || ""} style={{ width: "100%", color: grey[300] }} placeholder="Enter a Document ID" onChange={(event) => {
+              <InputBase inputProps={{ spellCheck: false }} value={documentID || ""} fullWidth placeholder="Enter a Document ID" onChange={(event) => {
                 let toRoute = "/";
                 if (event.target.value) {
                   toRoute += event.target.value;
@@ -56,7 +55,7 @@ const NavBar: React.FC<IProps> = (props) => {
             </Paper>
           </Grid>
           <Grid item xs={3} container justify="flex-end" alignItems="center">
-            {!props.authenticated && <Button color="inherit" onClick={props.onClick} variant="outlined">Connect</Button>}
+            {!props.authenticated && <Button onClick={props.onClick} variant="outlined">Connect</Button>}
             {props.authenticated && <Button style={{ textTransform: "none" }} startIcon={props.profile && props.profile.image && props.profile.image.original && <Avatar src={toImageSrc(props.profile.image.original)} />} variant="outlined" target="_blank" href="https://self-id.vercel.app/">{(props.profile && props.profile.name) || (window.idx && formatDID(window.idx.id))}&nbsp;{props.profile && props.profile.emoji}</Button>}
             <Tooltip title="Toggle Dark Mode">
               <IconButton onClick={props.onDarkModeToggle}>
