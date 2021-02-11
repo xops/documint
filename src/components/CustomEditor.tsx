@@ -16,7 +16,7 @@ interface IProps {
 const CustomEditor: React.FC<IProps> = (props) => {
   const [editor, setEditor] = useState<any>();
   useEffect(() => {
-    if (editor !== undefined && props.value && props.value !== editor.getValue()) {
+    if (editor !== undefined) {
       const modelUriString = `inmemory://json-${Math.random()}.json`;
       const modelUri = monaco.Uri.parse(modelUriString);
       try {
