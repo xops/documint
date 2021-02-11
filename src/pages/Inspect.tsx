@@ -286,7 +286,7 @@ const Inspect: React.FC<IProps> = (props) => {
           {currentCommits && currentCommits.slice().reverse().map((commit, index) => (
             <ListItem button selected={isSelectedCommit(commit, {cid: selectedCommit})} onClick={() => handleVersionChange(commit.cid)}>
               <ListItemText>
-                <Typography color={index === 0 ? "secondary" : "textPrimary"} style={{ fontSize: "11px" }}>
+                <Typography color={index === 0 ? "secondary" : "textSecondary"} style={{ fontSize: "11px" }}>
                   {commit.cid} {index === 0 ? "(latest)" : null}
                 </Typography>
               </ListItemText>
@@ -302,7 +302,7 @@ const Inspect: React.FC<IProps> = (props) => {
           {currentSchema && currentSchema.state && currentSchema.state.log.slice().reverse().map((commit: any, index: any) => (
             <ListItem button selected={isSelectedCommit(commit, selectedSchemaCommit)} onClick={() => handleSchemaCommitChange(commit)}>
               <ListItemText>
-                <Typography color="secondary" style={{ fontSize: "11px" }}>
+                <Typography color={index === 0 ? "secondary" : "textSecondary"} style={{ fontSize: "11px" }}>
                   {commit.cid.toString()} {index === 0 ? "(latest)" : null}
                 </Typography>
               </ListItemText>

@@ -26,6 +26,9 @@ export const lightTheme = createMuiTheme({
     },
   },
   palette: {
+    secondary: {
+      main: "#ff3600",
+    },
     background: {
       default: "#fff",
     },
@@ -42,8 +45,11 @@ export const darkTheme = createMuiTheme({
   },
   palette: {
     type: "dark",
+    text: {
+      secondary: grey[500]
+    },
     secondary: {
-      main: "#ce9178"
+      main: "#ffb08a",
     },
     background: {
       default: grey[900],
