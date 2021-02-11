@@ -59,6 +59,7 @@ const Inspect: React.FC<IProps> = (props) => {
   const [currentDocument, setCurrentDocument] = useState<Doctype | undefined>();
   const [currentDocumentStateJSON, setCurrentDocumentStateJSON] = useState<any>();
   const [currentSchema, setCurrentSchema] = useState<any | undefined>();
+  const [currentSchemaStateJSON, setCurrentSchemaStateJSON] = useState<any | undefined>();
   const [currentSchemaDocID, setCurrentSchemaDocID] = useState<DocID | undefined>();
   const [currentCommits, setCurrentCommits] = useState<Record<string, any>[] | undefined>();
   const [selectedSchemaCommit, setSelectedSchemaCommit] = useState<any | undefined>();
@@ -77,6 +78,7 @@ const Inspect: React.FC<IProps> = (props) => {
       setCurrentSchemaDocID(d.id.baseID);
       setSelectedSchemaCommit(d.state.log[d.state.log.length - 1]);
       setCurrentSchema(d);
+      setCurrentSchemaStateJSON(stateToJSON(d.state));
     }
   };
 
@@ -206,7 +208,7 @@ const Inspect: React.FC<IProps> = (props) => {
 
     /* const docHasSchema = currentDocumentStateJSON?.metadata.schema;
      * if (!docHasSchema && currentSchemaDocID) {
-     *   return 
+     *   return
      * }
 
      * if (docHasSchema) {
@@ -233,7 +235,7 @@ const Inspect: React.FC<IProps> = (props) => {
           editorDidMount={(editor: any) => {
             setSchemaEditor(editor)
           }}
-          value={(currentSchema && currentSchema.state && currentSchema.state.content && JSON.stringify(currentSchema.state.content, null, 4)) || ""} 
+          value={(currentSchema && currentSchema.state && currentSchema.state.content && JSON.stringify(currentSchema.state.content, null, 4)) || ""}
         />
       </MosaicWindow>
     ),
@@ -251,7 +253,7 @@ const Inspect: React.FC<IProps> = (props) => {
           editorDidMount={(editor: any) => {
             setDocumentEditor(editor)
           }}
-          schema={currentSchema?.state?.content}
+          schema={currentSchemaStateJSON?.content}
           onChange={(value: any) => {
             setDirtyJSON(value);
           }}
@@ -374,12 +376,12 @@ const Inspect: React.FC<IProps> = (props) => {
   }, [documentID]); //eslint-disable-line
 
   useEffect(() => {
-    if (currentSchema === undefined || currentSchema.state === undefined || currentSchema.state.content === undefined) { return; }
-    const schemaContentStr = JSON.stringify(currentSchema.state.content, null, 4);
+    if (currentSchemaStateJSON === undefined || currentSchemaStateJSON.content === undefined) { return; }
+    const schemaContentStr = JSON.stringify(currentSchemaStateJSON.content, null, 4);
     if (schemaEditor && schemaEditor.getValue() !== schemaContentStr) {
       schemaEditor.setValue(schemaContentStr);
     }
-  }, [currentSchema, schemaEditor]);
+  }, [currentSchemaStateJSON, schemaEditor]);
 
   useInterval(async () => {
     if (!window.ceramic) {
