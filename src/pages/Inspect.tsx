@@ -221,7 +221,6 @@ const Inspect: React.FC<IProps> = (props) => {
   };
 
   const isSelectedCommit = (commit: any, selected: any): boolean => {
-    console.log(commit, selected);
     if (!selected || !commit.cid) {
       return false;
     }
@@ -295,7 +294,7 @@ const Inspect: React.FC<IProps> = (props) => {
       </MosaicWindow>
     ),
     schemaPicker: (id, path) => (
-      <MosaicWindow<ViewId> path={path} title={"Schema Picker"}>
+      <MosaicWindow<ViewId> path={path} title={"Schema Commit Picker"}>
         <InputBase placeholder="Enter Document ID" value={currentSchemaDocID} style={{paddingLeft: "5px"}} fullWidth onChange={(ev) => handleSchemaDocIDChange(ev.target.value)}></InputBase>
         <List style={{ height: "100%", overflow: "auto" }}>
           {currentSchema && currentSchema.state && currentSchema.state.log.slice().reverse().map((commit: any, index: any) => (
