@@ -18,16 +18,20 @@ const MyApp: React.FC = () => {
   const darkMode = useDarkMode();
   const theme = darkMode.value ? darkTheme : lightTheme;
   const [authenticated, setAuthenticated] = useState(false);
+  const [connecting, setConnecting] = useState(false);
   const [profile, setProfile] = useState<any>();
 
   const handleClick = () => {
+    setConnecting(true);
     authenticate().then(async (did: string) => {
+      setConnecting(false);
       setAuthenticated(true);
       if (window.idx) {
         const profile = await window.idx.get("basicProfile", did);
         setProfile(profile);
       }
     }).catch((e) => {
+      setConnecting(false);
       console.log("error", e);
     });
   }
@@ -44,6 +48,7 @@ const MyApp: React.FC = () => {
           <Route path="/:documentID">
             <NavBar
               authenticated={authenticated}
+              connecting={connecting}
               onClick={handleClick}
               onDarkModeToggle={darkMode.toggle}
               darkMode={darkMode.value}
@@ -53,6 +58,7 @@ const MyApp: React.FC = () => {
           </Route>
           <Route path="/">
             <NavBar
+              connecting={connecting}
               authenticated={authenticated}
               onClick={handleClick}
               onDarkModeToggle={darkMode.toggle}

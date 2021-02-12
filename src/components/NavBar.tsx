@@ -1,5 +1,5 @@
 import React from "react";
-import { AppBar, Button, Grid, IconButton, InputBase, Paper, Toolbar, Tooltip, Typography, Avatar } from "@material-ui/core";
+import { AppBar, Button, Grid, IconButton, InputBase, Paper, Toolbar, Tooltip, Typography, Avatar, CircularProgress } from "@material-ui/core";
 import type { ImageMetadata } from '@ceramicstudio/idx-constants'
 
 import Brightness3Icon from "@material-ui/icons/Brightness3";
@@ -15,6 +15,7 @@ export function toImageSrc(image: ImageMetadata): string {
 
 interface IProps {
   authenticated: boolean;
+  connecting: boolean;
   onDarkModeToggle: () => void;
   darkMode: boolean;
   onClick: () => void;
@@ -55,7 +56,7 @@ const NavBar: React.FC<IProps> = (props) => {
             </Paper>
           </Grid>
           <Grid item xs={3} container justify="flex-end" alignItems="center">
-            {!props.authenticated && <Button onClick={props.onClick} variant="outlined">Connect</Button>}
+            {!props.authenticated && <Button startIcon={props.connecting ? <CircularProgress variant="indeterminate"/> : undefined} onClick={props.onClick} variant="outlined">Connect</Button>}
             {props.authenticated && <Button style={{ textTransform: "none" }} startIcon={props.profile && props.profile.image && props.profile.image.original && <Avatar src={toImageSrc(props.profile.image.original)} />} variant="outlined" target="_blank" href="https://self-id.vercel.app/">{(props.profile && props.profile.name) || (window.idx && formatDID(window.idx.id))}&nbsp;{props.profile && props.profile.emoji}</Button>}
             <Tooltip title="Toggle Dark Mode">
               <IconButton onClick={props.onDarkModeToggle}>

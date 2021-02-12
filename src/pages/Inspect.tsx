@@ -8,6 +8,7 @@ import CustomEditor from '../components/CustomEditor';
 import { DocState, DoctypeUtils, Doctype } from '@ceramicnetwork/common';
 import { InputBase, Button, List, ListItem, ListItemText, Typography, Tooltip, CircularProgress, Paper } from "@material-ui/core";
 import EditIcon from "@material-ui/icons/Edit"
+import Save from "@material-ui/icons/Save"
 import { useParams, useHistory } from "react-router-dom";
 import useInterval from "use-interval";
 import StatusPill from "../components/StatusPill";
@@ -72,9 +73,20 @@ const Inspect: React.FC<IProps> = (props) => {
 
   const handleSchemaDocIDChange = async (val: string) => {
     const schemaDocID = val.replace("ceramic://", "");
-    if (val === "") { return; }
+    if (val === "") {
+      setCurrentSchemaDocID(undefined);
+      setSelectedSchemaCommit(undefined);
+      setCurrentSchema(undefined);
+      setCurrentSchemaStateJSON(undefined);
+      return;
+    }
 
-    const d = await window.ceramic?.loadDocument(schemaDocID);
+    let d: Doctype | undefined;
+    try {
+      d = await window.ceramic?.loadDocument(schemaDocID);
+    } catch (e) {
+      // dont error on bad doc ids
+    }
     if (d) {
       setCurrentSchemaDocID(d.id.baseID);
       setSelectedSchemaCommit(d.state.log[d.state.log.length - 1]);
@@ -129,7 +141,6 @@ const Inspect: React.FC<IProps> = (props) => {
 
     let schemaDocIDLockedToCommit;
     if (currentSchemaDocID) {
-      console.log("string commit id" + selectedSchemaCommit, currentSchemaDocID);
       schemaDocIDLockedToCommit = DocID.fromOther(currentSchemaDocID, selectedSchemaCommit.cid.toString()).toString();
       console.log(schemaDocIDLockedToCommit);
     }
@@ -242,7 +253,7 @@ const Inspect: React.FC<IProps> = (props) => {
     ),
     document: (id, path) => (
       <MosaicWindow<ViewId> path={path} title={"Document"} toolbarControls={[
-        shouldShowSave() && <Button variant="contained" color="secondary" style={{ height: "30px", marginRight: "10px" }} onClick={handleSave}>Save</Button>,
+        shouldShowSave() && <Button variant="contained" color="secondary" style={{ height: "30px", marginRight: "10px" }} startIcon={<Save />} onClick={handleSave}>Save</Button>,
         loading && <CircularProgress size="20" style={{ marginTop: "5px", marginRight: "10px" }} variant="indeterminate"></CircularProgress>,
         currentDocumentStateJSON && currentDocumentStateJSON.next && <StatusPill title="The 'next' property will contain the latest updates of the document before the've been anchored.">NEXT</StatusPill>,
         currentDocumentStateJSON && <StatusPill title="Anchor Status" style={{ background: anchorStatusMapToColor[currentDocumentStateJSON.anchorStatus] }}>{currentDocumentStateJSON.anchorStatus}</StatusPill>,
@@ -392,7 +403,12 @@ const Inspect: React.FC<IProps> = (props) => {
   }, [documentID]); //eslint-disable-line
 
   useEffect(() => {
-    if (currentSchemaStateJSON === undefined || currentSchemaStateJSON.content === undefined) { return; }
+    if (currentSchemaStateJSON === undefined || currentSchemaStateJSON.content === undefined) {
+      if (schemaEditor) {
+        schemaEditor.setValue("");
+      }
+      return
+    }
     const schemaContentStr = JSON.stringify(currentSchemaStateJSON.content, null, 4);
     if (schemaEditor && schemaEditor.getValue() !== schemaContentStr) {
       schemaEditor.setValue(schemaContentStr);
