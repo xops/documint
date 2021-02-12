@@ -1,12 +1,11 @@
 {
-  "name": "web-playground",
+  "name": "@xops/documint",
   "version": "0.0.0-development",
-  "description": "Ceramic Web playground",
-  "author": "Ceramic Studio",
+  "description": "Documint",
   "license": "(Apache-2.0 OR MIT)",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ceramicstudio/web-playground.git"
+    "url": "git+https://github.com/xops/documint/"
   },
   "scripts": {
     "start": "react-app-rewired start",
