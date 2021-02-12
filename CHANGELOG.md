@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/xops/documint/compare/1.0.1...1.0.2) (2021-02-12)
+
+
+### Bug Fixes
+
+* gh-pages html5 pushstate support ([b4675d4](https://github.com/xops/documint/commit/b4675d43671767b674868426e160fab86cddcf8c))
+
 ## [1.0.1](https://github.com/xops/documint/compare/1.0.0...1.0.1) (2021-02-12)
 
 
