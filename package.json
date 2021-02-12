@@ -5,7 +5,7 @@
   "license": "(Apache-2.0 OR MIT)",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xops/documint/"
+    "url": "git+https://github.com/xops/documint.git"
   },
   "scripts": {
     "start": "react-app-rewired start",
