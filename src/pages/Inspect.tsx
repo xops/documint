@@ -172,9 +172,9 @@ const Inspect: React.FC<IProps> = (props) => {
           };
         }
 
+        setCurrentDocument(undefined);
         await currentDocument.change(update)
-
-        loadDocument(currentDocument.id.toString());
+        loadDocument(documentID, true, true);
       } catch (e) {
         alert(e.message);
       }
@@ -332,7 +332,7 @@ const Inspect: React.FC<IProps> = (props) => {
     }
   };
 
-  const loadDocument = async (docid: string, populateCurrentCommits: boolean = true) => { //eslint-disable-line
+  const loadDocument = async (docid: string, populateCurrentCommits: boolean = true, force: boolean = false) => { //eslint-disable-line
     if (!docid || docid === "") {
       setCurrentSchema(undefined);
       setCurrentDocument(undefined);
@@ -342,13 +342,14 @@ const Inspect: React.FC<IProps> = (props) => {
     }
     try {
       setLoading(true);
+
       const d = await window.ceramic?.loadDocument(docid);
       if (!d) {
         alert("no document found");
         return;
       }
       // if same doc return early
-      if (currentDocument && JSON.stringify(currentDocument.state.content) === JSON.stringify(d.state.content) && currentDocument.state.anchorStatus === d.state.anchorStatus && currentDocument.id.toString() === d.id.toString()) {
+      if (!force && currentDocument && JSON.stringify(currentDocument.state.content) === JSON.stringify(d.state.content) && currentDocument.state.anchorStatus === d.state.anchorStatus && currentDocument.id.toString() === d.id.toString()) {
         setLoading(false);
         return;
       }

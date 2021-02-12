@@ -48,6 +48,7 @@
     "web3modal": "^1.9.3"
   },
   "devDependencies": {
+    "@ceramicnetwork/cli": "^0.20.8",
     "@types/classnames": "^2.2.11",
     "@types/react-router-dom": "^5.1.7",
     "@typescript-eslint/eslint-plugin": "^4.14.2",
