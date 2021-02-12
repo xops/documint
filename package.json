@@ -12,7 +12,7 @@
     "start": "react-app-rewired start",
     "build": "react-app-rewired build",
     "dev": "ceramic daemon --network=inmemory",
-    "lint": "eslint -c .eslintrc.js --ext .ts",
+    "lint": "eslint -c .eslintrc.json --ext .ts",
     "test": "npm run lint && react-app-rewired test --coverage --passWithNoTests"
   },
   "dependencies": {
