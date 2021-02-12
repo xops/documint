@@ -13,7 +13,7 @@
     "build": "react-app-rewired build",
     "dev": "ceramic daemon --network=inmemory",
     "lint": "eslint -c .eslintrc.json --ext .ts",
-    "test": "npm run lint && react-app-rewired test --coverage --passWithNoTests"
+    "test": "react-app-rewired test --coverage --passWithNoTests"
   },
   "dependencies": {
     "3id-connect": "^1.0.0-alpha.15",
