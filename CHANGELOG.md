@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/xops/documint/compare/1.0.0...1.0.1) (2021-02-12)
+
+
+### Bug Fixes
+
+* add CNAME ([3edada2](https://github.com/xops/documint/commit/3edada2234b92a903daf84bd12c5a13005ded2fd))
+
 # 1.0.0 (2021-02-12)
 
 
